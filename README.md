@@ -66,7 +66,7 @@ Plus two controls outside the call path:
 
 ## Red-team results
 
-`agentgate-redteam` fires 9 attack patterns at a naive agent and at the same agent behind AgentGate (50 seeded trials each), and runs 9 benign cases that must get **exactly** their expected decision. CI fails the build if a single attack gets through.
+`agentgate-redteam` fires 9 attack patterns at a naive agent and at the same agent behind AgentGate (50 attempts each), and runs 9 benign cases that must get **exactly** their expected decision. CI fails the build if a single attack gets through.
 
 | Attack | Naive agent | Behind AgentGate | Stopped by |
 |---|--:|--:|---|
@@ -84,7 +84,7 @@ Plus two controls outside the call path:
 **Benign suite:** 9/9 correct · **0 false blocks.** Full table: [`docs/redteam-report.md`](docs/redteam-report.md).
 
 > [!NOTE]
-> `p_naive` (how often an ungated agent follows an injection) is an illustrative per-attack-class rate, sampled with a fixed seed so CI is reproducible. The harness is model-agnostic: swap the sampler for a real model run to measure your own agent.
+> `p_naive` (the share of attempts in which an ungated agent obeys the injection) is an illustrative per-attack-class rate, applied deterministically so CI and the [browser playground](https://cdxdebian.github.io/AI-Redteam-Playground/) report identical numbers. The harness is model-agnostic: replace the simulated agent with a real model run to measure your own.
 
 ## Quick start
 

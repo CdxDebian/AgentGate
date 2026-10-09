@@ -1,7 +1,8 @@
 """Red-team harness and CI gate.
 
 For every attack, simulate N attempts against a naive agent (it follows the injected
-instruction with probability p_naive) and against the same agent behind AgentGate.
+instruction in round(p_naive * N) of them, deterministically, so CI and the browser
+playground agree exactly) and against the same agent behind AgentGate.
 
     attack success (naive) = the agent complied
     attack success (gated) = the agent complied AND the gate let the call run unattended
@@ -16,7 +17,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import random
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -105,16 +105,15 @@ class Report:
         }
 
 
-def run(policy: Policy, scenarios: dict, trials: int = 50, seed: int = 1337) -> Report:
-    gate, rng = Gate(policy), random.Random(seed)
+def run(policy: Policy, scenarios: dict, trials: int = 50) -> Report:
+    gate = Gate(policy)
     attacks: list[AttackResult] = []
     for sc in scenarios["attacks"]:
         ctx = _segments(sc["context"])
         naive = gated = held = blocked = 0
         stopped: set[str] = set()
-        for _ in range(trials):
-            if rng.random() >= sc["p_naive"]:
-                continue  # the model ignored the injection this time
+        complied = round(sc["p_naive"] * trials)  # attempts where the model obeys the injection
+        for _ in range(complied):
             naive += 1
             if "output" in sc:
                 res = sanitize_output(sc["output"], policy.render_hosts)
@@ -164,13 +163,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--policy", default=str(default_policy_path()))
     ap.add_argument("--scenarios", default=str(default_scenarios_path()))
     ap.add_argument("--trials", type=int, default=50)
-    ap.add_argument("--seed", type=int, default=1337)
     ap.add_argument("--json", metavar="PATH", help="also write the full report as JSON")
     ap.add_argument("--markdown", metavar="PATH", help="also write the report table as Markdown")
     args = ap.parse_args(argv)
 
     report = run(Policy.load(args.policy), yaml.safe_load(Path(args.scenarios).read_text(encoding="utf-8")),
-                 trials=args.trials, seed=args.seed)
+                 trials=args.trials)
     md = render_markdown(report)
     print(md)
     if args.json:
