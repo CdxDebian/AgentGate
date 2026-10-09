@@ -1,0 +1,43 @@
+# AgentGate policy — the single source of truth for what an agent may do.
+# Reviewed like code: every change goes through a pull request and CI re-runs
+# the red-team suite against it (see .github/workflows/ci.yml).
+
+version: 1
+
+# Every tool the agent may call, with its risk tier.
+# Anything NOT listed here is denied by rule R0 (default deny).
+#   read        — no side effects
+#   write       — creates or changes internal records
+#   egress      — sends data outside the agent's boundary
+#   high        — large blast radius (bulk data, containment actions)
+#   destructive — irreversible deletion
+#   persistence — changes the agent's own future behaviour (memory)
+tools:
+  search_kb:     { risk: read,        description: Search the internal knowledge base }
+  read_ticket:   { risk: read,        description: Read a support ticket }
+  lookup_ioc:    { risk: read,        description: Threat-intel lookup for a hash, IP or domain }
+  create_ticket: { risk: write,       description: Open a ticket in the ITSM tool }
+  send_email:    { risk: egress,      description: Send an email }
+  http_get:      { risk: egress,      description: Fetch a URL }
+  bulk_export:   { risk: high,        description: Export a full dataset }
+  isolate_host:  { risk: high,        description: Network-isolate an endpoint via EDR }
+  delete_record: { risk: destructive, description: Delete a record }
+  memory_write:  { risk: persistence, description: Write to the agent's long-term memory }
+
+egress:
+  # Hosts an egress tool may contact (exact match or subdomain).
+  hosts:
+    - kb.corp.example
+    - tickets.corp.example
+    - www.virustotal.com
+  # Recipient domains send_email may deliver to.
+  email_domains:
+    - corp.example
+
+output:
+  # Hosts allowed to appear as rendered images/links in model output (OWASP LLM05).
+  render_hosts:
+    - corp.example
+
+# Tiers that always need a human, even in fully trusted context (rule R5).
+always_approve: [high, destructive, persistence]

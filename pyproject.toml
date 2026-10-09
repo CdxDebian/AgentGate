@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agentgate"
+version = "1.0.0"
+description = "Provenance-aware policy gate for AI-agent tool calls: ALLOW / REQUIRE_APPROVAL / BLOCK, mapped to MITRE ATLAS and OWASP LLM Top 10."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Rahul Shrivastava" }]
+requires-python = ">=3.10"
+dependencies = ["PyYAML>=6.0"]
+keywords = ["ai-security", "prompt-injection", "llm", "agents", "guardrails", "mitre-atlas", "owasp-llm"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.5"]
+
+[project.urls]
+Homepage = "https://github.com/CdxDebian/AgentGate"
+"Live demo" = "https://cdxdebian.github.io/AI-Redteam-Playground/"
+
+[project.scripts]
+agentgate = "agentgate.cli:main"
+agentgate-redteam = "agentgate.redteam:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 130
+target-version = "py310"
